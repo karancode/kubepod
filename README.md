@@ -15,5 +15,8 @@ OPTIONS:
 ## Installation
 
 ### macOS
-Using [Homebrew](https://brew.sh/) package manager.
-`brew install kubepod`
+Using [Homebrew](https://brew.sh/) package manager, currently my local tap.  
+```
+brew tap kdthanvi/kubepod
+brew install kubepod
+```
