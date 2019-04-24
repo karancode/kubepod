@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+[[ -n $DEBUG ]] && set -x
+
+#set -eou pipefail
+#IFS=$'\n\t'
+
+SELF_CMD="$0"
+
+usage() {
+  cat <<"EOF"
+USAGE:
+  kubepod [options...] [name_pattern...]
+OPTIONS:
+  kubepod                       : list the pods
+  kubepod -w,--wide             : list pods with wide output
+  kubepod <name_pattern>        : list the pod matching the <name_pattern> string
+
+  kubepod -h,--help             : show this message
+EOF
+}
+
+get_pods(){
+    set -u pipefail
+    $KUBECTL get pods
+}
+
+get_pods_wide(){
+    set -u pipefail
+    $KUBECTL get pods -o wide
+}
+
+get_specific_pods(){
+    POD_NAME_STR="$1"
+    $KUBECTL get pods | grep $POD_NAME_STR
+}
+
+# optimize later
+get_specific_pods_wide(){
+    POD_NAME_STR="$1"
+    $KUBECTL get pods -o wide | grep $POD_NAME_STR  # logical bug, solve later
+}
+
+# optimize later
+get_specific_pods_list(){
+    for pod_name in "$@"
+    do
+        echo "---$pod_name----"
+        get_specific_pods $pod_name
+    done
+}
+
+# optimize later
+get_specific_pods_list_wide(){
+    echo "$@"
+    for pod_name in "${@:2}"
+    do
+        echo "--$pod_name--"
+        get_specific_pods_wide $pod_name
+    done
+}
+
+main() {
+    if hash kubectl 2>/dev/null; then
+        KUBECTL=kubectl
+    elif hash kubectl.exe 2>/dev/null; then
+        KUBECTL=kubectl.exe
+    else
+        echo >&2 "kubectl is not installed"
+        exit 1
+    fi
+
+    case "$#" in
+        0)
+            get_pods
+            ;;
+        1)
+            case "${1}" in
+                -w | --wide)
+                    get_pods_wide
+                    ;;
+                -h | --help)
+                    usage
+                    ;;
+                [a-zA-Z0-9]* )
+                    get_specific_pods "${1}"
+                    ;;
+                -*)
+                    usage
+                
+            esac
+            ;;
+        2)
+            case "${1}" in
+                -w | --wide)
+                    if [[ "${2}" == -* ]]; then
+                        usage 
+                    else
+                        get_specific_pods_wide "${2}"
+                    fi
+                    ;;
+                -h | --help)
+                    usage
+                    ;;
+                [a-zA-Z0-9]*)
+                    if [[ "${2}" == -* ]]; then
+                        usage 
+                    else
+                        get_specific_pods_list "$@"
+                    fi
+                    ;;    
+            esac
+            ;;
+        [3-99])
+            echo "here"
+            case "${1}" in
+                -w | --wide)
+                    echo "now here"
+                    get_specific_pods_list_wide "$@"
+                    ;;
+                [a-zA-Z0-9]*)
+                    get_specific_pods_list "$@"
+                    ;;
+                -h | --help)
+                    usage
+                    ;;
+            esac
+            ;;
+        *)
+            echo >&2 "At max 99 arguments are supported."
+            exit 1
+    esac
+
+}
+
+main "$@"
