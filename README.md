@@ -11,3 +11,9 @@ OPTIONS:
 
   kubepod -h,--help             : show this message
 ```
+
+## Installation
+
+### macOS
+Using [Homebrew](https://brew.sh/) package manager.
+`brew install kubepod`
